@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/drone-plugins/drone-git-push/repo"
@@ -62,6 +63,16 @@ func main() {
 }
 
 func run(workspace *drone.Workspace, build *drone.Build, vargs *Params) error {
+	if vargs.Directory != "" {
+		workspace.Path = filepath.Join(workspace.Path, vargs.Directory)
+	}
+
+	if _, err := os.Stat(filepath.Join(workspace.Path, ".git")); os.IsNotExist(err) {
+		if _err := execute(Init(), workspace); _err != nil {
+			return err
+		}
+	}
+
 	repo.GlobalName(build).Run()
 	repo.GlobalUser(build).Run()
 
